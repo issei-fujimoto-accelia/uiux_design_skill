@@ -1,0 +1,105 @@
+{
+  "contract": 1,
+  "packages": [
+    "design"
+  ],
+  "providers": {
+    "ui_guidelines": "design"
+  },
+  "paths": {
+    "ui_guidelines": "docs/D2/UI_GUIDELINES.md",
+    "ux_structure": "docs/D2/UX_STRUCTURE.md",
+    "screens": "docs/D2/screens/",
+    "components": "docs/D2/components/",
+    "tokens": "docs/D2/design-tokens.json",
+    "mock": "docs/D2/mock/",
+    "design_work": "docs/work/design/"
+  },
+  "ids": {
+    "PSN": {
+      "owner": [
+        "docs/D2/UI_GUIDELINES.md"
+      ],
+      "upstream": [
+        "OV",
+        "C"
+      ],
+      "package": "design"
+    },
+    "UI": {
+      "owner": [
+        "docs/D2/UI_GUIDELINES.md",
+        "docs/D2/UX_STRUCTURE.md"
+      ],
+      "upstream": [
+        "FR",
+        "NFR",
+        "OV",
+        "C",
+        "PSN"
+      ],
+      "package": "design"
+    },
+    "CMP": {
+      "owner": [
+        "docs/D2/UI_GUIDELINES.md"
+      ],
+      "upstream": [
+        "UI",
+        "FR",
+        "SCR"
+      ],
+      "package": "design"
+    },
+    "SCR": {
+      "owner": [
+        "docs/D2/UX_STRUCTURE.md"
+      ],
+      "upstream": [
+        "FR",
+        "OV",
+        "C",
+        "FLW"
+      ],
+      "package": "design"
+    },
+    "FLW": {
+      "owner": [
+        "docs/D2/UX_STRUCTURE.md"
+      ],
+      "upstream": [
+        "FR",
+        "OV",
+        "C",
+        "PSN"
+      ],
+      "package": "design"
+    }
+  },
+  "design": {
+    "platforms": [
+      "web",
+      "ios",
+      "android"
+    ],
+    "viewports": {
+      "ios": [
+        390,
+        844
+      ],
+      "android": [
+        412,
+        915
+      ],
+      "desktop": [
+        1440,
+        900
+      ]
+    },
+    "conformance": {
+      "impl_base_url": null,
+      "state_param": "state",
+      "routes": {}
+    }
+  }
+}

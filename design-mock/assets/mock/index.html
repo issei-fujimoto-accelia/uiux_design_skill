@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- モックのビューア（design-mock が配置する。直接編集しない）。
+     画面一覧は assets/manifest.js（mock_index.py で生成）から読む。 -->
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mock Viewer</title>
+  <script src="assets/manifest.js"></script>
+  <style>
+    :root{--bg:#f3f4f6;--panel:#fff;--ink:#16181d;--muted:#5b6270;--line:#d4d7dd;--accent:#3e63dd;color-scheme:light dark}
+    @media (prefers-color-scheme:dark){:root{--bg:#111316;--panel:#1a1d22;--ink:#eceef2;--muted:#a3a9b5;--line:#30343b;--accent:#7a9bff}}
+    *{box-sizing:border-box}
+    body{margin:0;height:100dvh;display:grid;grid-template-columns:240px 1fr;grid-template-rows:auto 1fr;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,sans-serif}
+    header{grid-column:1/3;display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+    header strong{margin-right:auto}
+    label{display:flex;gap:6px;align-items:center;color:var(--muted)}
+    select,button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+    nav{overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:8px}
+    nav a{display:block;padding:6px 10px;border-radius:6px;color:var(--ink);text-decoration:none}
+    nav a[aria-current="true"]{background:var(--accent);color:#fff}
+    nav small{display:block;color:var(--muted);padding:8px 10px 2px}
+    #stage{overflow:auto;display:grid;place-items:start center;padding:24px}
+    #frame{border:0;background:#fff;border-radius:12px;box-shadow:0 0 0 1px var(--line),0 12px 32px rgb(0 0 0/.15);transform-origin:top center}
+    #meta{grid-column:2;color:var(--muted);font-size:12px;padding:0 24px}
+    @media (max-width:720px){body{grid-template-columns:1fr}nav{max-height:30vh}#stage{padding:8px}}
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Mock Viewer</strong>
+    <label>端末 <select id="vp"></select></label>
+    <label>状態 <select id="state"></select></label>
+    <label>テーマ <select id="theme"><option value="">端末に従う</option><option value="light">light</option><option value="dark">dark</option></select></label>
+    <label>プラットフォーム <select id="platform"><option>web</option><option>ios</option><option>android</option></select></label>
+    <label><input type="checkbox" id="annotate"> 注釈</label>
+    <button id="open" type="button">新しいタブで開く</button>
+  </header>
+  <nav id="list" aria-label="画面"></nav>
+  <main id="stage"><iframe id="frame" title="モック"></iframe></main>
+  <script>
+    const M = window.MOCK_MANIFEST || { screens: [], viewports: { ios: [390, 844] }, components: "components.html" };
+    const $ = (id) => document.getElementById(id);
+    const items = [...M.screens, { id: "CMP", title: "部品カタログ", file: M.components, states: ["default"] }];
+    const s = Object.assign({ id: items[0]?.id, vp: Object.keys(M.viewports)[0], state: "default", theme: "", platform: "web", annotate: false },
+      Object.fromEntries(new URLSearchParams(location.hash.slice(1))));
+    s.annotate = s.annotate === true || s.annotate === "1";
+
+    for (const [k, [w, h]] of Object.entries(M.viewports)) $("vp").add(new Option(`${k} ${w}×${h}`, k));
+    $("list").innerHTML = `<small>画面</small>` + M.screens.map((x) => `<a href="#" data-id="${x.id}">${x.id} ${x.title}</a>`).join("")
+      + `<small>部品</small><a href="#" data-id="CMP">部品カタログ</a>`;
+    $("list").onclick = (e) => { const a = e.target.closest("a"); if (!a) return; e.preventDefault(); s.id = a.dataset.id; s.state = "default"; render(); };
+    for (const k of ["vp", "state", "theme", "platform"]) $(k).onchange = (e) => { s[k] = e.target.value; render(); };
+    $("annotate").onchange = (e) => { s.annotate = e.target.checked; render(); };
+    $("open").onclick = () => open(src(), "_blank");
+    addEventListener("resize", fit);
+
+    function current() { return items.find((x) => x.id === s.id) || items[0]; }
+    function src() {
+      const q = new URLSearchParams();
+      if (s.state !== "default") q.set("state", s.state);
+      if (s.theme) q.set("theme", s.theme);
+      if (s.platform !== "web") q.set("platform", s.platform);
+      if (s.annotate) q.set("annotate", "1");
+      return current().file + (q.toString() ? "?" + q : "");
+    }
+    function fit() {
+      const [w, h] = M.viewports[s.vp];
+      const f = $("frame"), avail = $("stage").clientWidth - 48;
+      const k = Math.min(1, avail / w);
+      Object.assign(f.style, { width: w + "px", height: h + "px", transform: `scale(${k})`, marginBottom: `${(k - 1) * h}px` });
+    }
+    function render() {
+      const cur = current();
+      if (!cur) { $("stage").textContent = "画面がありません。mock_index.py を実行してください。"; return; }
+      $("state").innerHTML = "";
+      cur.states.forEach((x) => $("state").add(new Option(x, x)));
+      if (!cur.states.includes(s.state)) s.state = cur.states[0];
+      for (const k of ["vp", "state", "theme", "platform"]) $(k).value = s[k];
+      $("annotate").checked = s.annotate;
+      document.querySelectorAll("nav a").forEach((a) => a.setAttribute("aria-current", String(a.dataset.id === cur.id)));
+      $("frame").src = src();
+      fit();
+      history.replaceState(null, "", "#" + new URLSearchParams({ ...s, annotate: s.annotate ? "1" : "0" }));
+    }
+    render();
+  </script>
+</body>
+</html>

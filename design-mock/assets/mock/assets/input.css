@@ -1,0 +1,33 @@
+/* Tailwind CSS v4 の入力。design-mock が配置する。
+   ビルド：npx @tailwindcss/cli@4 -i docs/D2/mock/assets/input.css -o docs/D2/mock/assets/mock.css */
+@import "tailwindcss" source(none);
+@import "./theme.css";
+
+@source "../screens";
+@source "../components.html";
+@source "./components.js";
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-primary, currentColor);
+    outline-offset: 2px;
+  }
+}
+
+/* 画面間の遷移（同一オリジンで配信したとき有効）。動きを減らす設定では無効にする。 */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

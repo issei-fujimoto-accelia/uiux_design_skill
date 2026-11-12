@@ -1,0 +1,29 @@
+<!doctype html>
+<!-- 部品カタログ。CMP-N ごとに <section id="CMP-N"> を置き、components/CMP-N.md の「状態と変種」の
+     すべてを data-example="<名前>" 付きの例として並べる。 -->
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>部品カタログ</title>
+  <link rel="stylesheet" href="assets/mock.css">
+  <script src="assets/annotations.js" defer></script>
+  <script src="assets/mock-kit.js" defer></script>
+  <script src="assets/components.js" defer></script>
+</head>
+<body data-states="default" class="bg-surface font-sans text-ink">
+  <main class="mx-auto max-w-4xl space-y-12 px-6 py-10">
+    <h1 class="text-2xl font-bold">部品カタログ</h1>
+
+    <section id="CMP-1" class="space-y-4">
+      <h2 class="text-lg font-semibold">CMP-1 主要ボタン</h2>
+      <div class="flex flex-wrap items-center gap-4">
+        <ui-button data-example="primary pressed focus">通常</ui-button>
+        <ui-button variant="secondary" data-example="secondary">副次</ui-button>
+        <ui-button disabled data-example="disabled">無効</ui-button>
+        <ui-button busy data-example="busy">処理中</ui-button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

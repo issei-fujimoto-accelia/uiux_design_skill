@@ -1,0 +1,203 @@
+{
+  "$description": "例。色は役割で命名する（bg-surface、text-ink、border-line のように読めるようにする）。値の根拠は UI_GUIDELINES.md の6節（UI-N）に書く。",
+  "color": {
+    "surface": {
+      "$type": "color",
+      "$value": "#ffffff",
+      "$extensions": {
+        "modes": {
+          "dark": "#0f1115"
+        }
+      },
+      "subtle": {
+        "$type": "color",
+        "$value": "#f4f5f7",
+        "$extensions": {
+          "modes": {
+            "dark": "#181b21"
+          }
+        }
+      }
+    },
+    "ink": {
+      "$type": "color",
+      "$value": "#16181d",
+      "$extensions": {
+        "modes": {
+          "dark": "#eceef2"
+        }
+      },
+      "muted": {
+        "$type": "color",
+        "$value": "#5b6270",
+        "$extensions": {
+          "modes": {
+            "dark": "#a3a9b5"
+          }
+        }
+      }
+    },
+    "line": {
+      "$type": "color",
+      "$value": "#8a919e",
+      "$extensions": {
+        "modes": {
+          "dark": "#5f6675"
+        }
+      }
+    },
+    "primary": {
+      "$type": "color",
+      "$value": "#1f4fd8",
+      "$extensions": {
+        "modes": {
+          "dark": "#7aa2ff"
+        }
+      }
+    },
+    "on-primary": {
+      "$type": "color",
+      "$value": "#ffffff",
+      "$extensions": {
+        "modes": {
+          "dark": "#0b1430"
+        }
+      }
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "#c4262e",
+      "$extensions": {
+        "modes": {
+          "dark": "#ff8a8f"
+        }
+      }
+    }
+  },
+  "font": {
+    "sans": {
+      "$type": "fontFamily",
+      "$value": [
+        "Noto Sans JP",
+        "system-ui",
+        "sans-serif"
+      ]
+    }
+  },
+  "text": {
+    "sm": {
+      "$type": "dimension",
+      "$value": "0.875rem",
+      "$extensions": {
+        "lineHeight": "1.6"
+      }
+    },
+    "base": {
+      "$type": "dimension",
+      "$value": "1rem",
+      "$extensions": {
+        "lineHeight": "1.7"
+      }
+    },
+    "lg": {
+      "$type": "dimension",
+      "$value": "1.25rem",
+      "$extensions": {
+        "lineHeight": "1.5"
+      }
+    },
+    "2xl": {
+      "$type": "dimension",
+      "$value": "1.75rem",
+      "$extensions": {
+        "lineHeight": "1.3"
+      }
+    }
+  },
+  "spacing": {
+    "$type": "dimension",
+    "$value": "0.25rem"
+  },
+  "radius": {
+    "sm": {
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    "md": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "full": {
+      "$type": "dimension",
+      "$value": "9999px"
+    }
+  },
+  "shadow": {
+    "raised": {
+      "$type": "shadow",
+      "$value": "0 1px 2px rgb(0 0 0 / 0.08), 0 4px 12px rgb(0 0 0 / 0.06)"
+    }
+  },
+  "ease": {
+    "out": {
+      "$type": "cubicBezier",
+      "$value": "cubic-bezier(0.2, 0, 0, 1)"
+    },
+    "in": {
+      "$type": "cubicBezier",
+      "$value": "cubic-bezier(0.4, 0, 1, 1)"
+    }
+  },
+  "duration": {
+    "fast": {
+      "$type": "duration",
+      "$value": "120ms"
+    },
+    "base": {
+      "$type": "duration",
+      "$value": "200ms"
+    },
+    "page": {
+      "$type": "duration",
+      "$value": "320ms"
+    }
+  },
+  "$contrast": [
+    {
+      "fg": "color.ink",
+      "bg": "color.surface",
+      "min": 4.5,
+      "note": "本文"
+    },
+    {
+      "fg": "color.ink.muted",
+      "bg": "color.surface",
+      "min": 4.5,
+      "note": "補足の文"
+    },
+    {
+      "fg": "color.ink",
+      "bg": "color.surface.subtle",
+      "min": 4.5,
+      "note": "カード上の本文"
+    },
+    {
+      "fg": "color.on-primary",
+      "bg": "color.primary",
+      "min": 4.5,
+      "note": "主要ボタンの文字"
+    },
+    {
+      "fg": "color.line",
+      "bg": "color.surface",
+      "min": 3,
+      "note": "入力欄の枠（1.4.11）"
+    },
+    {
+      "fg": "color.danger",
+      "bg": "color.surface",
+      "min": 4.5,
+      "note": "エラー文"
+    }
+  ]
+}

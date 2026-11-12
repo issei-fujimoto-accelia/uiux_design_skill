@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- 画面の雛形。SCR-N.html にコピーして使う（_template.html 自体は一覧に出ない）。
+     docs/D2/screens/SCR-N.md（詳細設計）をそのまま写す。
+     - body の data-ui に SCR-N、data-states に詳細設計の「状態」をすべて書く。
+     - 状態ごとの内容は data-state="<状態>" の要素に入れる（複数可：data-state="default error"）。
+     - プラットフォームで変わる部分は data-platform="ios android" のように書く。
+     - 詳細設計の「領域」の各行に data-ui="SCR-N/<名前>" の要素を置き、「規則」を data-rules="UI-N" に書く。 -->
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SCR-N 画面名</title>
+  <link rel="stylesheet" href="../assets/mock.css">
+  <script src="../assets/annotations.js" defer></script>
+  <script src="../assets/mock-kit.js" defer></script>
+  <script src="../assets/components.js" defer></script>
+</head>
+<body data-ui="SCR-N" data-states="default empty loading error" class="min-h-dvh bg-surface font-sans text-ink">
+  <main class="mx-auto max-w-xl px-4 pt-6 pb-28">
+    <section data-state="default"></section>
+    <section data-state="empty"></section>
+    <section data-state="loading" aria-busy="true"></section>
+    <section data-state="error" role="alert"></section>
+  </main>
+</body>
+</html>
