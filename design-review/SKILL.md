@@ -8,7 +8,7 @@ argument-hint: "[check|self-check|conformance]"
 
 ## 共通
 
-1. 設定ファイルを確認する（`../design-foundation/references/config.md`）。
+1. `../design-foundation/references/GUIDE.md` を読み、設定ファイルを確認する（`../design-foundation/references/config.md`）。
 2. `docs/work/` の記録は照合の基準にしない。基準は `docs/D2/` の文書、トークン、モックである。
 3. 指摘には、根拠（ファイルと行、画面と状態）と、直す側の候補（文書／モック／実装）を書く。どれを直すかはユーザーに委ねる。
 
@@ -19,8 +19,8 @@ ID、詳細設計、モックの網羅を機械的に検査する。読み取り
 | 検査 | 内容 |
 |---|---|
 | ids | ID の重複、所有文書外の定義、由来と理由の欠落、未定義の参照、参照されない ID |
-| details | 画面と部品の詳細設計の有無、必須の節、領域・状態・受け取る値・状態と変種の必須の列、残った「未決」 |
-| mock | 画面ファイルと状態、領域の `data-ui`、部品の定義と要素名、受け取る値の使用、カタログの `data-example`、トークン外の値 |
+| details | 画面と部品の詳細設計の有無、必須の節、領域・状態・受け取る値・状態と変種の必須の列、残った「未決」、部品の「使う画面」と領域の一致、使用が1画面以下の部品、廃止した画面への参照 |
+| mock | 画面ファイルと状態、領域の `data-ui`、部品の定義と要素名、受け取る値の使用、カタログの `data-example`、部品の使用（詳細設計とモック）、出口とリンクの一致、廃止した画面へのリンク、トークン外の値 |
 
 ```
 python3 scripts/design_check.py all --root <プロジェクト>
@@ -35,7 +35,7 @@ python3 ../design-visual/scripts/tokens.py contrast --root <プロジェクト>
 
 - 対象は、モック（既定）または実装（引数で `self-check impl`）。実装の場合は、`design.conformance.impl_base_url` の画面を撮影する。
 - 独立採点は毎ラウンド必須。作成した文脈を持たないサブエージェント（または新しいセッション）に任せる。
-- 改善でモックや文書を直す場合は、design-mock の「指摘の反映」の順に従う。
+- 改善でモックや文書を直す場合は、design-revise の `references/change-types.md` の種類と手順に従う。
 - 記録は `docs/work/design/rounds/NN/review.md`。
 
 ## conformance

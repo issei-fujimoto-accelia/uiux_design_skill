@@ -8,7 +8,7 @@ description: 画面を持つプロダクトの情報構造、操作シナリオ�
 
 ## 手順
 
-1. 設定ファイルを確認する（`../design-foundation/references/config.md`）。
+1. `../design-foundation/references/GUIDE.md` を読み、設定ファイルを確認する（`../design-foundation/references/config.md`）。
 2. 入力を読む。
    - base の有無に応じた入力（config.md の表）。要件の画面一覧と機能を特に見る。
    - `docs/D2/UI_GUIDELINES.md`（ペルソナ `PSN-N`、全体の規則 `UI-N`）。未作成なら design-foundation を先に実行するよう提案して終える。

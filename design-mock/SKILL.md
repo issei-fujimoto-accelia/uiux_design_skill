@@ -1,6 +1,6 @@
 ---
 name: design-mock
-description: UI_GUIDELINES.md、UX_STRUCTURE.md、画面と部品の詳細設計（screens/、components/）、design-tokens.json から、画面遷移と状態と簡単な動きを人が確認できる HTML モック（Tailwind CSS v4 と Web Components）を docs/D2/mock/ に作り、レビューの指摘を反映する。design-visual の後、実装の前に使う。デザインの変更をモックに反映するときにも使う。
+description: UI_GUIDELINES.md、UX_STRUCTURE.md、画面と部品の詳細設計（screens/、components/）、design-tokens.json から、画面遷移と状態と簡単な動きを人が確認できる HTML モック（Tailwind CSS v4 と Web Components）の初版を docs/D2/mock/ に作る。design-visual の後に使う。作成後の修正は design-revise で行う。
 ---
 
 デザインの文書を、人が触って確かめられるモックにする。モックは承認後「正」になり、実装はモックに合わせる。
@@ -8,7 +8,7 @@ description: UI_GUIDELINES.md、UX_STRUCTURE.md、画面と部品の詳細設計
 
 ## 手順
 
-1. 設定ファイルを確認する（`../design-foundation/references/config.md`）。
+1. `../design-foundation/references/GUIDE.md` を読み、設定ファイルを確認する（`../design-foundation/references/config.md`）。
 2. 入力を読む：`docs/D2/UI_GUIDELINES.md`、`docs/D2/UX_STRUCTURE.md`、`docs/D2/screens/SCR-N.md`、`docs/D2/components/CMP-N.md`、`docs/D2/design-tokens.json`。どれかが未作成か、詳細設計に「未決（design-visual）」が残っているなら、足りない工程（design-structure、design-visual）を提案して終える。
 3. [references/conventions.md](references/conventions.md) と `../design-foundation/references/principles.md`、`platforms.md` を読む。
 4. 配置する。
@@ -34,23 +34,8 @@ description: UI_GUIDELINES.md、UX_STRUCTURE.md、画面と部品の詳細設計
    - `python3 scripts/shoot.py --root <プロジェクト>`：全画面・全状態・各ビューポートを撮影する。ページのエラーを0件にする。24px 未満のタップ領域は、直すか、理由を `UI-N` に書く。
    - 撮影した画像を見て、UX_STRUCTURE.md の各画面の P1 が最初の画面内に見えるか、主要操作が1つに見えるかを確かめる。
    - `python3 ../design-review/scripts/design_check.py all --root <プロジェクト>`：ERROR を0件にする。
-9. 人の確認③：ビューア（`docs/D2/mock/index.html`。配信方法は conventions.md）を示し、FLW-N の順に操作してもらう。注釈（`?annotate=1`）で各判断の理由を確認できることを伝える。
-10. 指摘を反映する（下の「指摘の反映」）。承認を `docs/work/design/approvals.md` に記録する。
-11. 次の工程として design-review（self-check）を提案する。
-
-## 指摘の反映
-
-指摘は、文書を先に直し、モックを後に直す。モックだけを直さない。
-
-| 指摘の種類 | 直す順 |
-|---|---|
-| 配置、導線、情報の優先度、状態、文言 | `screens/SCR-N.md`（画面をまたぐなら UX_STRUCTURE.md の `UI-N`）→ モック |
-| 色、文字、余白、動き | design-tokens.json と UI_GUIDELINES.md → `mock_build.py build` |
-| 部品の形、受け取る値、状態 | `components/CMP-N.md` → components.js と components.html |
-| ペルソナやコンセプトに関わる | design-foundation に戻る |
-
-指摘と対応は `docs/work/design/feedback/YYYY-MM-DD.md` に表で記録する（指摘、対象 ID、直した文書、状態）。
-承認後の変更は、base を併用している場合は base の変更フロー（変更 Issue）に従う。
+9. ユーザー（開発者）にビューア（`docs/D2/mock/index.html`。配信方法は conventions.md）を示し、FLW-N の順に操作してもらう。注釈（`?annotate=1`）で各判断の理由を確認できることを伝える。
+10. 以降の修正は design-revise で1ラウンドずつ行う。モックの完成（人の確認③）は design-revise の最後に記録する。
 
 ## 制約
 
@@ -64,4 +49,4 @@ description: UI_GUIDELINES.md、UX_STRUCTURE.md、画面と部品の詳細設計
 - すべての `CMP-N` が部品カタログに全状態で並んでいる
 - 画面の領域、状態、文言が詳細設計と一致し、部品カタログに「状態と変種」がすべて並んでいる
 - `design_check.py all` が ERROR 0件、`shoot.py` がページのエラー0件
-- 人の確認③が記録され、指摘がすべて反映済みか、理由付きで見送りになっている
+- 初版をユーザーに示した

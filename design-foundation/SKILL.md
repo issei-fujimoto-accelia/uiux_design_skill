@@ -8,7 +8,7 @@ description: 画面を持つプロダクト（Web、iOS、Android）のデザイ
 
 ## 手順
 
-1. 設定ファイルを確認・初期化する（[references/config.md](references/config.md)）。
+1. [references/GUIDE.md](references/GUIDE.md) を読み、設定ファイルを確認・初期化する（[references/config.md](references/config.md)）。
 2. 入力を読む。base の有無で入力が変わる（config.md の表）。既存の `docs/D2/UI_GUIDELINES.md` があれば読む。
 3. 次を読む。
    - [references/interview.md](references/interview.md)：インタビューの進め方

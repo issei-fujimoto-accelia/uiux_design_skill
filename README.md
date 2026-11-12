@@ -22,7 +22,8 @@ npx skills add issei-fujimoto-accelia/uiux_design_skill -a claude-code
 | design-foundation | 品質方針の解釈、ペルソナ（PSN）、利用状況、コンセプト、全体の規則 | `UI_GUIDELINES.md` 0〜5節 | ① コンセプト |
 | design-structure | 操作シナリオ（FLW）、画面（SCR）、遷移、ナビゲーション、配置、操作方法、情報の優先度 | `UX_STRUCTURE.md`、`screens/SCR-N.md` | ② 導線とワイヤー |
 | design-visual | 色、文字、余白、角丸、影、動き、共通部品（CMP） | `design-tokens.json`、`UI_GUIDELINES.md` 6〜9節、`components/CMP-N.md` | ― |
-| design-mock | HTML モック（Tailwind CSS v4、Web Components） | `docs/D2/mock/` | ③ モック |
+| design-mock | HTML モックの初版（Tailwind CSS v4、Web Components） | `docs/D2/mock/` | ― |
+| design-revise | 開発者の指摘を「層（規則、トークン、導線、部品、画面）× 操作（追加、変更、削除、移動）」で分類して直す1ラウンド。完成まで繰り返す | 文書、モック、`docs/work/design/revisions/` | ③ モック（完成時） |
 | design-review | 機械検査（check）、採点による改善（self-check）、モックと実装の照合（conformance） | `docs/work/design/` | ― |
 
 ## 利用フロー
@@ -36,7 +37,9 @@ design-structure    導線、画面、配置、操作を決める         → �
     ↓
 design-visual       トークンと共通部品を決める
     ↓
-design-mock         モックを作り、指摘を反映する           → 人の確認③（承認後、モックは正）
+design-mock         モックの初版を作る
+    ↓
+design-revise       指摘を層 × 操作で分類して直す（ラウンドを繰り返す）→ 人の確認③（完成後、モックは正）
     ↓
 design-review self-check   採点と独立採点で品質を上げる
     ↓
@@ -61,7 +64,7 @@ docs/D2/
 docs/work/design/           記録（正ではない）
   planning/                 インタビューの作業状態
   approvals.md              人の確認の記録
-  feedback/                 モックへの指摘と対応
+  revisions/R-NN.md         モックの修正ラウンドの記録（R-NN/ に前後のスクリーンショット）
   proposals/                provider が base のときの提案
   shots/                    スクリーンショット
   rounds/NN/review.md       self-check の記録
@@ -88,6 +91,8 @@ python3 <skills>/design-mock/scripts/shoot.py --root .                # 全画�
 python3 <skills>/design-review/scripts/design_check.py all --root .   # ID、詳細設計、モックの網羅
 python3 <skills>/design-visual/scripts/tokens.py contrast --root .    # コントラスト
 python3 <skills>/design-review/scripts/ui_diff.py --root .            # モックと実装の照合
+python3 <skills>/design-revise/scripts/impact.py --root . --git        # 変更の影響範囲
+python3 <skills>/design-mock/scripts/shoot.py --root . --out <後> --compare <前>   # 前後の比較
 python3 -m http.server -d docs/D2/mock 8000                           # モックを開く
 ```
 
@@ -101,6 +106,15 @@ design は base のスキルを直接呼ばない。base 側で必要な対応�
 | design だけ | design | ユーザーが指定した要件文書（由来は `外部:<パス>#<見出し>`） |
 | base だけ | base（簡易版） | ― |
 | 両方 | `providers.ui_guidelines` で選ぶ | `REQUIREMENTS.md` の FR / NFR、`PROJECT_OVERVIEW.md` の OV、`spec/` の C |
+
+## プロジェクトの AGENTS.md への追記
+
+スキルの使い方（配置、規則、工程、コマンド）は、スキル側の [GUIDE.md](design-foundation/references/GUIDE.md) にあり、各スキルが最初に読む。
+ただし、画面の実装のように design のスキルが動いていない作業では、スキル側の文書は読まれない。そうした作業でも守らせたい規則だけを、プロジェクトの AGENTS.md に追記する。
+
+- 雛形：リポジトリ直下の [AGENTS.snippet.md](AGENTS.snippet.md)。スキルとしてはインストールされないので、このリポジトリから人がコピーし、プロジェクトに合わせて追記する。
+- スキルは AGENTS.md と CLAUDE.md を書き換えない。design-foundation は、節がなければ GUIDE.md の「画面を実装するときの規則」を示して追記を提案するだけ。
+- CLAUDE.md を使う場合は、`@AGENTS.md` で AGENTS.md を取り込む。
 
 ## 書き方
 

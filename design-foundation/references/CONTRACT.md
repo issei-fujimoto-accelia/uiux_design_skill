@@ -90,7 +90,13 @@ uiux_design_skill（以下 design）と base_skill（以下 base）を、互い�
 
 base の implement-issue は、設定の `packages` に `"design"` があるときだけ本章を適用する。
 
-## 6. 互換性
+## 6. AGENTS.md と CLAUDE.md
+
+- AGENTS.md と CLAUDE.md はプロジェクトが管理する。スキルは書き換えない。
+- 各スキル群は、プロジェクトの AGENTS.md に追記してほしい節を雛形として提供する（design はリポジトリ直下の `AGENTS.snippet.md`。スキルには含めない）。追記するかどうかと書き方は、プロジェクトが決める。
+- 雛形には、そのスキル群が動いていない作業でも守らせたい規則だけを置く。スキルの使い方はスキル側の文書（design は `design-foundation/references/GUIDE.md`）に置く。
+
+## 7. 互換性
 
 | リポジトリ | 対応する contract |
 |---|---|

@@ -9,9 +9,10 @@
 
 ids     : design が所有する ID（PSN / UI / CMP / SCR / FLW）の重複定義、所有文書外での定義、
           由来・理由の欠落、未定義の ID への参照、一度も参照されない ID
-details : 画面と部品の詳細設計（screens/SCR-N.md、components/CMP-N.md）の有無、必須の節と列、残った「未決」
+details : 画面と部品の詳細設計（screens/SCR-N.md、components/CMP-N.md）の有無、必須の節と列、残った「未決」、
+          部品の「使う画面」と領域の一致、使用が1画面以下の部品、廃止した画面への参照
 mock    : 詳細設計とモックの一致（画面と状態、領域の data-ui、部品の要素名と受け取る値、
-          カタログの data-example）、トークン外の値（任意値）
+          カタログの data-example、部品の使用）、廃止した画面へのリンク、トークン外の値（任意値）
 
 終了コード: ERROR があれば 1。標準ライブラリのみ。
 """
@@ -140,6 +141,7 @@ def check_details(root, cfg, rep: Report, by_id=None):
                 _check_screen_detail(id_, rel, secs, rep)
             else:
                 _check_component_detail(id_, rel, secs, rep)
+    check_usage_docs(root, cfg, rep, by_id, details)
     return details
 
 
@@ -188,6 +190,137 @@ def detail_rows(details, id_, section, col):
     if id_ not in details or section not in details[id_][2]:
         return []
     return [r.get(col, "").strip("` ") for r in details[id_][2][section].rows() if r.get(col, "").strip("` ")]
+
+
+# ---- 部品の使用（design_check と impact.py が使う） ----
+CMP_RE = re.compile(r"CMP-\d+")
+SCR_RE = re.compile(r"SCR-\d+")
+BLOCK_RE = re.compile(r"""defineComponent\(\s*["']([\w-]+)["']\s*,(.*?)(?=defineComponent\(|\Z)""", re.S)
+
+
+def component_blocks(js: str) -> dict:
+    """components.js の {CMP-N: (要素名, 定義の本文)}。"""
+    out = {}
+    for m in BLOCK_RE.finditer(js):
+        idm = re.search(r"""id:\s*["'](CMP-\d+)["']""", m.group(2))
+        if idm:
+            out[idm.group(1)] = (m.group(1), m.group(2))
+    return out
+
+
+def read_mock(root, cfg):
+    """(画面ID → HTML, components.js, components.html) を返す。"""
+    mdir = mock_dir(root, cfg)
+    screens = {}
+    sdir = os.path.join(mdir, "screens")
+    if os.path.isdir(sdir):
+        for name in os.listdir(sdir):
+            m = re.fullmatch(r"(SCR-\d+)\.html", name)
+            if m:
+                screens[m.group(1)] = open(os.path.join(sdir, name), encoding="utf-8").read()
+    rd = lambda rel: open(os.path.join(mdir, rel), encoding="utf-8").read() if os.path.exists(os.path.join(mdir, rel)) else ""
+    return screens, rd("assets/components.js"), rd("components.html")
+
+
+def usage_map(root, cfg, by_id, details, mock=None) -> dict:
+    """{CMP-N: {"listed": 使う画面に書いた画面, "regions": 領域の部品列に書いた画面, "mock": モックで使う画面, "tag": 要素名}}"""
+    screens, js, _ = mock if mock is not None else read_mock(root, cfg)
+    blocks = component_blocks(js)
+    out = {}
+    for cid in active(by_id, "CMP"):
+        listed = set()
+        if cid in details and "基本" in details[cid][2]:
+            for r in details[cid][2]["基本"].rows():
+                if "使う画面" in r.get("項目", ""):
+                    listed |= set(SCR_RE.findall(r.get("内容", "")))
+        tag = blocks.get(cid, ("", ""))[0]
+        out[cid] = {"listed": listed, "regions": set(), "mock": set(), "tag": tag}
+    for sid in active(by_id, "SCR"):
+        if sid in details and "領域" in details[sid][2]:
+            for r in details[sid][2]["領域"].rows():
+                for cid in CMP_RE.findall(r.get("部品", "")):
+                    if cid in out:
+                        out[cid]["regions"].add(sid)
+    # 部品の中で使われる部品（入れ子）は、親の部品を使う画面でも使われる
+    nested = {cid: {c for c, (t, _) in blocks.items() if c != cid and t and re.search(rf"<{re.escape(t)}[\s>]", body)}
+              for cid, (_, body) in blocks.items()}
+    retired = retired_ids(by_id, "SCR")
+    for sid, html in screens.items():
+        if sid in retired or sid not in by_id:
+            continue  # 廃止した画面と未定義の画面は、別の検査で報告する
+        used = {cid for cid, v in out.items() if v["tag"] and re.search(rf"<{re.escape(v['tag'])}[\s>]", html)}
+        stack = list(used)
+        while stack:
+            for c in nested.get(stack.pop(), ()):
+                if c not in used:
+                    used.add(c)
+                    stack.append(c)
+        for cid in used:
+            if cid in out:
+                out[cid]["mock"].add(sid)
+    return out
+
+
+def retired_ids(by_id, prefix):
+    return {i for i, ds in by_id.items() if prefix_of(i) == prefix and ds[0].retired}
+
+
+def check_usage_docs(root, cfg, rep, by_id, details):
+    """部品の「使う画面」と画面の領域の「部品」列の一致、使用が1画面以下の部品、廃止した画面への参照（文書）。"""
+    um = usage_map(root, cfg, by_id, details, mock=({}, "", ""))
+    for cid, u in um.items():
+        rel = f"{detail_path(cfg, 'CMP')}/{cid}.md"
+        for sid in sorted(u["listed"] - u["regions"]):
+            rep.add("WARN", "使う画面の不一致", f"{cid}：使う画面に {sid} があるが、{sid} の領域で使っていない", rel)
+        for sid in sorted(u["regions"] - u["listed"]):
+            rep.add("WARN", "使う画面の不一致", f"{cid}：{sid} の領域で使っているが、使う画面にない", rel)
+        if len(u["regions"]) <= 1:
+            rep.add("WARN", "共通部品の使用が1画面以下", f"{cid}：使う画面が {len(u['regions'])} 画面。共通部品を続けるか判断する", rel)
+    retired = retired_ids(by_id, "SCR")
+    for sid in active(by_id, "SCR"):
+        if sid not in details:
+            continue
+        rel, _, secs = details[sid]
+        for name in ("入口と出口", "操作"):
+            for r in secs[name].rows() if name in secs else []:
+                for ref in set(SCR_RE.findall(" ".join(r.values()))) & retired:
+                    rep.add("ERROR", "廃止画面への参照", f"{sid}：「{name}」が廃止した {ref} を参照している", rel)
+    for fid, ds in by_id.items():
+        if prefix_of(fid) == "FLW" and not ds[0].retired:
+            for ref in set(SCR_RE.findall(ds[0].text)) & retired:
+                rep.add("ERROR", "廃止画面への参照", f"{fid} が廃止した {ref} を経由している", f"{ds[0].file}:{ds[0].line}")
+
+
+def check_usage_mock(root, cfg, rep, by_id, details, mock):
+    """詳細設計とモックの部品の使用の一致、廃止した画面へのリンク（モック）。"""
+    rel_m = os.path.relpath(mock_dir(root, cfg), root)
+    um = usage_map(root, cfg, by_id, details, mock)
+    for cid, u in um.items():
+        if not u["tag"]:
+            continue
+        for sid in sorted(u["mock"] - u["regions"]):
+            rep.add("ERROR", "設計にない部品の使用", f"{sid}：モックで {cid}（{u['tag']}）を使っているが、詳細設計の領域にない", f"{rel_m}/screens/{sid}.html")
+        for sid in sorted(u["regions"] - u["mock"]):
+            rep.add("ERROR", "部品の使用漏れ", f"{sid}：詳細設計の領域で {cid} を使うが、モックで使っていない", f"{rel_m}/screens/{sid}.html")
+    retired = retired_ids(by_id, "SCR")
+    screens = mock[0]
+    # 遷移：詳細設計の「出口」とモックのリンクの一致
+    for sid, html in screens.items():
+        if sid not in details or sid in retired:
+            continue
+        rel_d, _, secs = details[sid]
+        exits = {x for r in (secs["入口と出口"].rows() if "入口と出口" in secs else [])
+                 if "出口" in r.get("種類", "") for x in SCR_RE.findall(r.get("画面", ""))}
+        links = set(re.findall(r'href="(?:\.\./screens/|)(SCR-\d+)\.html', html)) - {sid}
+        for x in sorted(links - exits - retired):
+            rep.add("WARN", "設計にない遷移", f"{sid}：モックに {x} へのリンクがあるが、詳細設計の出口にない", rel_d)
+        for x in sorted(exits - links):
+            rep.add("WARN", "遷移の漏れ", f"{sid}：詳細設計の出口 {x} へのリンクがモックにない", f"{rel_m}/screens/{sid}.html")
+    for sid in sorted(retired & set(screens)):
+        rep.add("WARN", "廃止画面のモック", f"廃止した {sid} の画面ファイルが残っている", f"{rel_m}/screens/{sid}.html")
+    for sid, html in screens.items():
+        for ref in sorted(set(re.findall(r'href="(?:\.\./screens/|)(SCR-\d+)\.html', html)) & retired):
+            rep.add("ERROR", "廃止画面への参照", f"{sid}：廃止した {ref} へのリンクがある", f"{rel_m}/screens/{sid}.html")
 
 
 def check_ids(root, cfg, rep: Report):
@@ -275,11 +408,7 @@ def check_mock(root, cfg, rep: Report, by_id=None, details=None):
     js = open(comp_js, encoding="utf-8").read() if os.path.exists(comp_js) else ""
     catalog = os.path.join(mdir, "components.html")
     cat = open(catalog, encoding="utf-8").read() if os.path.exists(catalog) else ""
-    blocks = {}
-    for m in re.finditer(r"""defineComponent\(\s*["']([\w-]+)["']\s*,(.*?)(?=defineComponent\(|\Z)""", js, re.S):
-        idm = re.search(r"""id:\s*["'](CMP-\d+)["']""", m.group(2))
-        if idm:
-            blocks[idm.group(1)] = (m.group(1), m.group(2))
+    blocks = component_blocks(js)
     js_rel = f"{rel_m}/assets/components.js"
     for id_ in active(by_id, "CMP"):
         if id_ not in blocks:
@@ -309,6 +438,13 @@ def check_mock(root, cfg, rep: Report, by_id=None, details=None):
     for id_ in sorted(blocks):
         if id_ not in by_id:
             rep.add("ERROR", "未定義の部品", f"components.js の {id_} が文書で定義されていない", js_rel)
+
+    screens = {}
+    for sid in os.listdir(os.path.join(mdir, "screens")) if os.path.isdir(os.path.join(mdir, "screens")) else []:
+        m2 = re.fullmatch(r"(SCR-\d+)\.html", sid)
+        if m2:
+            screens[m2.group(1)] = open(os.path.join(mdir, "screens", sid), encoding="utf-8").read()
+    check_usage_mock(root, cfg, rep, by_id, details, (screens, js, cat))
 
     # トークン外の値
     for dirpath, _, files in os.walk(mdir):

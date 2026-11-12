@@ -8,7 +8,7 @@ description: 画面を持つプロダクトの色、文字、余白、角丸、�
 
 ## 手順
 
-1. 設定ファイルを確認する（`../design-foundation/references/config.md`）。
+1. `../design-foundation/references/GUIDE.md` を読み、設定ファイルを確認する（`../design-foundation/references/config.md`）。
 2. 入力を読む：`docs/D2/UI_GUIDELINES.md`、`docs/D2/UX_STRUCTURE.md`、`docs/D2/screens/`、既存の `docs/D2/design-tokens.json` と `docs/D2/components/`。UX_STRUCTURE.md が未作成なら、design-structure を先に実行するよう提案して終える。
 3. 次を読む。
    - [references/tokens.md](references/tokens.md)、[references/components.md](references/components.md)、[references/question-bank.md](references/question-bank.md)

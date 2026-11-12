@@ -14,6 +14,7 @@ design の各スキルは、作業の最初にこの手順を行う。規則の�
    - `design` がなければ雛形から追加する。
    - 他のスキル群のキーは消さない、書き換えない。
 4. `docs/D2/`、`docs/work/design/` がなければ作る。
+5. design-foundation のときだけ：プロジェクトの AGENTS.md に design の節（目安：`data-ui` や「文書 → トークン → モック → 実装」の規則）があるかを確認する。なければ、GUIDE.md の「画面を実装するときの規則」と「デザインの規則」のうち変更の順序を示し、ユーザーに AGENTS.md への追記を提案する（雛形は uiux_design_skill リポジトリ直下の `AGENTS.snippet.md`）。AGENTS.md と CLAUDE.md は自分で書き換えない。
 
 ## base が導入されているかの判断
 
