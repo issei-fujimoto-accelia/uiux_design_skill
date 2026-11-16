@@ -4,7 +4,9 @@
      - body の data-ui に SCR-N、data-states に詳細設計の「状態」をすべて書く。
      - 状態ごとの内容は data-state="<状態>" の要素に入れる（複数可：data-state="default error"）。
      - プラットフォームで変わる部分は data-platform="ios android" のように書く。
-     - 詳細設計の「領域」の各行に data-ui="SCR-N/<名前>" の要素を置き、「規則」を data-rules="UI-N" に書く。 -->
+     - 詳細設計の「領域」の各行に data-ui="SCR-N/<名前>" の要素を置き、「規則」を data-rules="UI-N" に書く。
+     - 画面の枠は詳細設計の「レイアウト」の部品（例：<ui-app-shell>）で、共通部品は要素（<ui-xxx>）で書く。
+       部品と同じ HTML を手書きしない。data-ui="CMP-N" を直接書かない。 -->
 <html lang="ja">
 <head>
   <meta charset="utf-8">

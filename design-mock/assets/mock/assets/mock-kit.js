@@ -20,8 +20,14 @@
   /**
    * 共通部品を定義する。
    * @param {string} tag カスタム要素名（例：ui-button）
-   * @param {{id: string, rules?: string[], render: (attrs: object, content: string) => string}} def
+   * @param {{id: string, rules?: string[], slots?: string[], render: (attrs: object, content: string, slots: object) => string}} def
    *   id は CMP-N。render は HTML 文字列を返す。ルートの要素は1つにする。
+   *   - attrs   : カスタム要素の属性（ケバブケースはキャメルケースに変換。真偽の属性は "" になるので `"name" in attrs` で判定する）
+   *   - content : slot 属性のない子の HTML
+   *   - slots   : slot 属性を持つ子の HTML を、slot の名前ごとにまとめたもの（レイアウト部品の差し込み口）
+   *               例：<ui-app-shell><h1 slot="title">予約</h1><section>本文</section></ui-app-shell>
+   *               → slots.title = "<h1>予約</h1>"、content = "<section>本文</section>"
+   *               def.slots に差し込み口の名前を列挙すると、定義にない名前を警告する
    *   カスタム要素は描画後にルートの要素で置き換わる（実装と同じ DOM になり、親の space-y や gap が効く）。
    *   カスタム要素に書いた class、id、data-state、data-platform、data-rules、data-example、aria-* はルートに引き継ぐ。
    */
@@ -35,8 +41,21 @@
         connectedCallback() {
           const attrs = {};
           for (const a of this.attributes) attrs[toCamel(a.name)] = a.value;
+          const slots = {};
+          for (const child of [...this.children]) {
+            const name = child.getAttribute("slot");
+            if (!name) continue;
+            child.remove();
+            child.removeAttribute("slot");
+            slots[name] = (slots[name] || "") + child.outerHTML;
+          }
+          if (def.slots) {
+            for (const name of Object.keys(slots)) {
+              if (!def.slots.includes(name)) console.warn(`[mock] ${tag}: 差し込み口 "${name}" は定義されていない`, def.slots);
+            }
+          }
           const tpl = document.createElement("template");
-          tpl.innerHTML = def.render(attrs, this.innerHTML).trim();
+          tpl.innerHTML = def.render(attrs, this.innerHTML, slots).trim();
           const el = tpl.content.firstElementChild;
           if (!el || tpl.content.children.length > 1) {
             console.warn(`[mock] ${tag}: render はルートの要素を1つだけ返す`);

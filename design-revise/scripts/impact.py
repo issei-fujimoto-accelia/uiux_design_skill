@@ -174,7 +174,7 @@ def main():
             for sid in active(by_id, "SCR"):
                 if sid == id_:
                     continue
-                linked = re.search(rf'href="[^"]*{id_}\.html', screens.get(sid, ""))
+                linked = re.search(rf'="[^"]*{id_}\.html', screens.get(sid, ""))
                 in_doc = sid in details and any(
                     id_ in " ".join(r.values()) for n in ("入口と出口", "操作")
                     for r in (details[sid][2][n].rows() if n in details[sid][2] else []))

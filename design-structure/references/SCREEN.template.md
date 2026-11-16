@@ -13,6 +13,7 @@
 
 | 項目 | 内容 |
 |---|---|
+| レイアウト | CMP-N（画面の枠。使わない場合は ―。design-visual が埋める） |
 | 要件 | FR-3, FR-4 |
 | 実装ルート | `/reservations/:id`（固定データ：`/reservations/demo`） |
 | 関わるシナリオ | FLW-1（手順2） |

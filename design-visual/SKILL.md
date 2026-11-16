@@ -15,7 +15,7 @@ description: 画面を持つプロダクトの色、文字、余白、角丸、�
    - [references/COMPONENT.template.md](references/COMPONENT.template.md)
    - `../design-foundation/references/principles.md`、`platforms.md`、`id-rules.md`、`writing.md`
 4. 色、文字、余白と形、動きの推奨案を作る。各案に理由を添え、観点ごとにまとめてユーザーに確認する。一度に確認するのは1つの観点だけにする。
-5. 画面の詳細設計の「領域」から共通部品を洗い出し、`CMP-N` の案を作って確認する（基準は components.md）。
+5. 画面の詳細設計の「領域」から共通部品を、画面の並びからレイアウト部品（画面の枠）を洗い出し、`CMP-N` の案を作って確認する（基準は components.md）。各画面の詳細設計の「基本」の「レイアウト」に、使うレイアウト部品を書く。
 6. 書く。
    - `docs/D2/design-tokens.json`（`$contrast` に、文字と背景の組み合わせをすべて列挙する）
    - `docs/D2/UI_GUIDELINES.md` の6〜9節（7節は部品の一覧だけ）

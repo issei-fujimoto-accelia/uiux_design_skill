@@ -12,7 +12,8 @@ ids     : design が所有する ID（PSN / UI / CMP / SCR / FLW）の重複定�
 details : 画面と部品の詳細設計（screens/SCR-N.md、components/CMP-N.md）の有無、必須の節と列、残った「未決」、
           部品の「使う画面」と領域の一致、使用が1画面以下の部品、廃止した画面への参照
 mock    : 詳細設計とモックの一致（画面と状態、領域の data-ui、部品の要素名と受け取る値、
-          カタログの data-example、部品の使用）、廃止した画面へのリンク、トークン外の値（任意値）
+          カタログの data-example、部品の使用、レイアウトの差し込み口）、部品の手書き（data-ui="CMP-N" の直書き、
+          未定義の部品要素、部品と同じクラスの手書き）、廃止した画面へのリンク、トークン外の値（任意値）
 
 終了コード: ERROR があれば 1。標準ライブラリのみ。
 """
@@ -241,6 +242,12 @@ def usage_map(root, cfg, by_id, details, mock=None) -> dict:
                 for cid in CMP_RE.findall(r.get("部品", "")):
                     if cid in out:
                         out[cid]["regions"].add(sid)
+        if sid in details and "基本" in details[sid][2]:
+            for r in details[sid][2]["基本"].rows():
+                if "レイアウト" in r.get("項目", ""):
+                    for cid in CMP_RE.findall(r.get("内容", "")):
+                        if cid in out:
+                            out[cid]["regions"].add(sid)
     # 部品の中で使われる部品（入れ子）は、親の部品を使う画面でも使われる
     nested = {cid: {c for c, (t, _) in blocks.items() if c != cid and t and re.search(rf"<{re.escape(t)}[\s>]", body)}
               for cid, (_, body) in blocks.items()}
@@ -291,6 +298,99 @@ def check_usage_docs(root, cfg, rep, by_id, details):
                 rep.add("ERROR", "廃止画面への参照", f"{fid} が廃止した {ref} を経由している", f"{ds[0].file}:{ds[0].line}")
 
 
+CUSTOM_TAG_RE = re.compile(r"<([a-z][a-z0-9]*-[a-z0-9-]+)(?=[\s>/])")
+CLASS_RE = re.compile(r'class="([^"]*)"')
+
+
+def root_classes(body: str) -> set:
+    """render が返す最初の要素の、式（${…}）を除いた固定のクラス。"""
+    out, i, depth = [], 0, 0
+    while i < len(body):  # ${…} を、入れ子の括弧ごと空白に置き換える
+        if body.startswith("${", i) and depth == 0:
+            depth, i = 1, i + 2
+            while i < len(body) and depth:
+                depth += {"{": 1, "}": -1}.get(body[i], 0)
+                i += 1
+            out.append(" ")
+            continue
+        out.append(body[i])
+        i += 1
+    m = re.search(r"`\s*<[a-z][\w-]*\b[^>]*?class=\"([^\"]*)\"", "".join(out), re.S)
+    return set(m.group(1).split()) if m else set()
+
+
+def element_classes(html: str):
+    """[(クラスの集合, 最も近い祖先（自身を含む）の data-ui)]。カスタム要素（部品の要素）自身は除く。"""
+    from html.parser import HTMLParser
+    void = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+    out, stack = [], []
+
+    class P(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            a = dict(attrs)
+            parent_ui = stack[-1][1] if stack else ""
+            ui = a.get("data-ui") or parent_ui
+            if a.get("class") and "-" not in tag:
+                out.append((set(a["class"].split()), ui))
+            if tag not in void:
+                stack.append((tag, ui))
+
+        def handle_endtag(self, tag):
+            for i in range(len(stack) - 1, -1, -1):
+                if stack[i][0] == tag:
+                    del stack[i:]
+                    break
+    P().feed(html)
+    return out
+
+
+def check_handwritten(root, cfg, rep, by_id, details, mock):
+    """共通部品を使わずに、画面に同じものを手書きしていないかを検査する。"""
+    rel_m = os.path.relpath(mock_dir(root, cfg), root)
+    screens, js, cat = mock
+    blocks = component_blocks(js)
+    tags = {t for t, _ in blocks.values()}
+    retired = retired_ids(by_id, "SCR")
+    sources = {f"{rel_m}/screens/{sid}.html": html for sid, html in screens.items() if sid not in retired}
+    sources[f"{rel_m}/components.html"] = cat
+    for where, html in sources.items():
+        body = re.sub(r"<!--.*?-->", "", html, flags=re.S)
+        for m in re.finditer(r'data-ui="(CMP-\d+[^"]*)"', body):
+            rep.add("ERROR", "部品の直書き", f'data-ui="{m.group(1)}" を画面に直接書いている。部品の要素（<ui-…>）を使う', where)
+        for t in sorted(set(CUSTOM_TAG_RE.findall(body)) - tags):
+            rep.add("ERROR", "未定義の部品要素", f"<{t}> が components.js で定義されていない（表示されない）", where)
+        if where.endswith("components.html"):
+            continue
+        sid = re.search(r"(SCR-\d+)\.html$", where).group(1)
+        own = set()
+        if sid in details and "画面独自の要素" in details[sid][2]:
+            own = {r.get("data-ui", "").strip("` ") for r in details[sid][2]["画面独自の要素"].rows()}
+        elements = [(c, ui) for c, ui in element_classes(body) if ui not in own]
+        for cid, (tag, b) in blocks.items():
+            rc = root_classes(b)
+            if len(rc) < 3:
+                continue
+            for c, ui in elements:
+                n = len(rc & c)
+                # 部品のルートの固定クラスと3つ以上、かつ部品側の半分以上か要素側の7割以上が一致する要素を、手書きの疑いとする
+                if n >= 3 and (n >= 0.5 * len(rc) or n >= 0.7 * len(c)):
+                    rep.add("WARN", "部品の手書きの疑い",
+                            f"{cid}（<{tag}>）とクラスの多くが同じ要素を手書きしている（{ui or '領域外'}）。部品の要素を使うか、"
+                            f"画面独自なら詳細設計の「画面独自の要素」に書く", where)
+                    break
+    js_rel = f"{rel_m}/assets/components.js"
+    for cid, (tag, b) in blocks.items():
+        for t in sorted(set(CUSTOM_TAG_RE.findall(b)) - tags):
+            rep.add("ERROR", "未定義の部品要素", f"{cid} の中の <{t}> が定義されていない", js_rel)
+        declared = set(re.findall(r"""["']([\w-]+)["']""", (re.search(r"slots:\s*\[([^\]]*)\]", b) or [None, ""])[1]))
+        want = {r.get("差し込み口", "").strip("` ") for r in (details[cid][2]["構成"].rows()
+                if cid in details and "構成" in details[cid][2] else [])} - {"", "―", "-"}
+        for name in sorted(want - declared):
+            rep.add("WARN", "差し込み口", f"{cid}：詳細設計の差し込み口 {name} が slots にない", js_rel)
+        for name in sorted(declared - want):
+            rep.add("WARN", "差し込み口", f"{cid}：slots の {name} が詳細設計の構成にない", js_rel)
+
+
 def check_usage_mock(root, cfg, rep, by_id, details, mock):
     """詳細設計とモックの部品の使用の一致、廃止した画面へのリンク（モック）。"""
     rel_m = os.path.relpath(mock_dir(root, cfg), root)
@@ -311,7 +411,7 @@ def check_usage_mock(root, cfg, rep, by_id, details, mock):
         rel_d, _, secs = details[sid]
         exits = {x for r in (secs["入口と出口"].rows() if "入口と出口" in secs else [])
                  if "出口" in r.get("種類", "") for x in SCR_RE.findall(r.get("画面", ""))}
-        links = set(re.findall(r'href="(?:\.\./screens/|)(SCR-\d+)\.html', html)) - {sid}
+        links = set(re.findall(r'="(?:\.\./screens/|)(SCR-\d+)\.html', html)) - {sid}
         for x in sorted(links - exits - retired):
             rep.add("WARN", "設計にない遷移", f"{sid}：モックに {x} へのリンクがあるが、詳細設計の出口にない", rel_d)
         for x in sorted(exits - links):
@@ -319,7 +419,7 @@ def check_usage_mock(root, cfg, rep, by_id, details, mock):
     for sid in sorted(retired & set(screens)):
         rep.add("WARN", "廃止画面のモック", f"廃止した {sid} の画面ファイルが残っている", f"{rel_m}/screens/{sid}.html")
     for sid, html in screens.items():
-        for ref in sorted(set(re.findall(r'href="(?:\.\./screens/|)(SCR-\d+)\.html', html)) & retired):
+        for ref in sorted(set(re.findall(r'="(?:\.\./screens/|)(SCR-\d+)\.html', html)) & retired):
             rep.add("ERROR", "廃止画面への参照", f"{sid}：廃止した {ref} へのリンクがある", f"{rel_m}/screens/{sid}.html")
 
 
@@ -445,6 +545,7 @@ def check_mock(root, cfg, rep: Report, by_id=None, details=None):
         if m2:
             screens[m2.group(1)] = open(os.path.join(mdir, "screens", sid), encoding="utf-8").read()
     check_usage_mock(root, cfg, rep, by_id, details, (screens, js, cat))
+    check_handwritten(root, cfg, rep, by_id, details, (screens, js, cat))
 
     # トークン外の値
     for dirpath, _, files in os.walk(mdir):

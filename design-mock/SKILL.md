@@ -18,8 +18,8 @@ description: UI_GUIDELINES.md、UX_STRUCTURE.md、画面と部品の詳細設計
    ```
 
    Tailwind が未導入なら、`npm i -D tailwindcss@4 @tailwindcss/cli@4` をユーザーに提案する（プロジェクトの devDependencies に入る）。
-5. 共通部品を先に作る：`components/CMP-N.md` に従い、`assets/components.js` に `CMP-N` を定義する（要素名はカスタム要素名、属性は受け取る値）。`components.html` に「状態と変種」のすべてを `data-example` 付きで並べる。
-6. 画面を作る：`SCR-N` ごとに `screens/SCR-N.html` を作り、`screens/SCR-N.md` をそのまま反映する。
+5. 共通部品とレイアウト部品を先に作る：`components/CMP-N.md` に従い、`assets/components.js` に `CMP-N` を定義する（要素名はカスタム要素名、属性は受け取る値、`slots` は構成の差し込み口）。`components.html` に「状態と変種」のすべてを `data-example` 付きで並べる。
+6. 画面を作る：`SCR-N` ごとに `screens/SCR-N.html` を作り、`screens/SCR-N.md` をそのまま反映する。画面の枠は詳細設計の「レイアウト」の部品で、共通部品は要素（`<ui-xxx>`）で書き、同じ HTML を手書きしない（conventions.md の「共通部品とレイアウト」）。
    - 領域：各行の `data-ui` を付けた要素を、優先度と配置のとおりに置く。行の「規則」を `data-rules` に付ける
    - 状態：`data-states` と `data-state` を「状態」の表と一致させる
    - 操作：「入口と出口」「操作」の遷移をリンクで、動きをトークンで再現する
